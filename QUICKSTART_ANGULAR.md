@@ -10,12 +10,20 @@
 ### 1. Install Dependencies
 
 ```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install npm dependencies
 npm install
 ```
 
 ### 2. Build Angular App
 
 ```bash
+# Make sure you're in the frontend directory
+cd frontend
+
+# Build Angular app (outputs to ../static/angular/)
 npm run build
 ```
 
@@ -41,10 +49,11 @@ For development with hot reload:
 
 ```bash
 # Terminal 1: Start Angular dev server
+cd frontend
 npm start
 # App will be at http://localhost:4200
 
-# Terminal 2: Start FastAPI backend
+# Terminal 2: Start FastAPI backend (from project root)
 python main.py
 # API will be at http://localhost:8000
 ```
@@ -64,9 +73,10 @@ python main.py
 ### Build Errors
 
 If you get build errors:
-1. Make sure Node.js v18+ is installed
-2. Run `npm install` to install dependencies
-3. Clear cache: `rm -rf node_modules package-lock.json && npm install`
+1. Navigate to frontend directory: `cd frontend`
+2. Make sure Node.js v18+ is installed
+3. Run `npm install` to install dependencies
+4. Clear cache: `rm -rf node_modules package-lock.json && npm install` (or on Windows: `Remove-Item -Recurse -Force node_modules,package-lock.json; npm install`)
 
 ### API Connection Issues
 
@@ -78,9 +88,10 @@ If the app can't connect to the API:
 ### Angular App Not Showing
 
 If you see "Angular app not found":
-1. Make sure you ran `npm run build`
-2. Check that `static/angular/index.html` exists
-3. Verify the build output in `static/angular/`
+1. Make sure you're in the frontend directory: `cd frontend`
+2. Run `npm run build` to build the app
+3. Check that `static/angular/browser/index.html` exists (Angular 17+ outputs to browser subdirectory)
+4. Verify the build output in `static/angular/browser/`
 
 ## Next Steps
 

@@ -5,6 +5,10 @@
 ### Step 1: Install Dependencies (First Time Only)
 
 ```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install Angular dependencies
 npm install
 ```
 
@@ -13,10 +17,14 @@ This installs all Angular dependencies. You only need to do this once, or when d
 ### Step 2: Build the Angular App
 
 ```bash
+# Make sure you're in the frontend directory
+cd frontend
+
+# Build the Angular app
 npm run build
 ```
 
-This compiles the Angular app and outputs it to `static/angular/` directory.
+This compiles the Angular app and outputs it to `../static/angular/` directory (relative to frontend).
 
 **Note**: You need to rebuild every time you make changes to the Angular code.
 
@@ -50,12 +58,17 @@ If you want to develop and see changes instantly:
 
 ### Terminal 1: Angular Dev Server
 ```bash
+# Navigate to frontend directory
+cd frontend
+
+# Start Angular dev server
 npm start
 ```
 This starts Angular dev server on `http://localhost:4200` with hot reload.
 
 ### Terminal 2: FastAPI Backend
 ```bash
+# From project root
 python main.py
 ```
 This starts the API backend on `http://localhost:8000`.
@@ -70,9 +83,10 @@ This starts the API backend on `http://localhost:8000`.
 
 If you see this message, it means the Angular app hasn't been built yet:
 
-1. Make sure you ran `npm run build`
-2. Check that `static/angular/index.html` exists
-3. Verify the build completed successfully
+1. Navigate to frontend directory: `cd frontend`
+2. Make sure you ran `npm run build`
+3. Check that `static/angular/browser/index.html` exists (Angular 17+ outputs to browser subdirectory)
+4. Verify the build completed successfully
 
 ### Port Already in Use
 
@@ -90,17 +104,26 @@ netstat -ano | findstr :8000
 If you get build errors:
 
 ```bash
-# Clear and reinstall
+# Navigate to frontend directory
+cd frontend
+
+# Clear and reinstall (Linux/Mac)
 rm -rf node_modules package-lock.json
+npm install
+npm run build
+
+# Or on Windows PowerShell
+Remove-Item -Recurse -Force node_modules,package-lock.json
 npm install
 npm run build
 ```
 
 ### Can't See the New Design
 
-1. Make sure you built the Angular app: `npm run build`
-2. Hard refresh your browser: `Ctrl+F5` (Windows) or `Cmd+Shift+R` (Mac)
-3. Clear browser cache if needed
+1. Navigate to frontend directory: `cd frontend`
+2. Make sure you built the Angular app: `npm run build`
+3. Hard refresh your browser: `Ctrl+F5` (Windows) or `Cmd+Shift+R` (Mac)
+4. Clear browser cache if needed
 
 ---
 
@@ -128,11 +151,17 @@ The new site features:
 ## Quick Commands Reference
 
 ```bash
+# Navigate to frontend directory
+cd frontend
+
 # Install dependencies
 npm install
 
 # Build for production
 npm run build
+
+# Start development server
+npm start
 
 # Development mode (hot reload)
 npm start

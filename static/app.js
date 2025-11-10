@@ -19,6 +19,8 @@ async function getInsights() {
         let url;
         if (actionType === 'insights') {
             url = `${API_BASE}/api/player/${encodeURIComponent(summonerName)}/insights?region=${region}&match_count=50`;
+        } else if (actionType === 'weekly-summary') {
+            url = `${API_BASE}/api/player/${encodeURIComponent(summonerName)}/weekly-summary?region=${region}&days=7`;
         } else if (actionType === 'year-summary') {
             url = `${API_BASE}/api/player/${encodeURIComponent(summonerName)}/year-summary?year=2024&region=${region}`;
         } else if (actionType === 'social-content') {
@@ -65,6 +67,52 @@ function displayResults(data, actionType) {
         document.getElementById('weaknessesList').innerHTML = formatList(data.weaknesses || [], 'weakness');
         document.getElementById('insightsList').innerHTML = formatList(data.unexpected_insights || [], 'insight-item');
         document.getElementById('recommendationsList').innerHTML = formatList(data.recommendations || [], 'insight-item');
+    } else if (actionType === 'weekly-summary') {
+        // Display weekly summary
+        let metricsHtml = '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;">';
+        metricsHtml += '<h3 style="margin-bottom: 15px;">⏱️ This Week in 30 Seconds</h3>';
+        metricsHtml += `<p style="font-size: 1.1em; line-height: 1.6;">${data.summary_30_seconds || 'No summary available'}</p>`;
+        metricsHtml += '</div>';
+        
+        // Highlights
+        if (data.highlights && data.highlights.length > 0) {
+            metricsHtml += '<div style="margin-bottom: 20px;"><h4 style="color: #667eea; margin-bottom: 15px;">🎬 Match Highlight Reel</h4>';
+            data.highlights.forEach(highlight => {
+                metricsHtml += `
+                    <div style="background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea;">
+                        <p style="font-weight: 600; color: #667eea; margin-bottom: 5px;">${highlight.type}</p>
+                        <p style="font-size: 1.1em; margin-bottom: 5px;"><strong>${highlight.moment}</strong></p>
+                        <p style="color: #666;">${highlight.description}</p>
+                    </div>
+                `;
+            });
+            metricsHtml += '</div>';
+        }
+        
+        // Signature moves
+        if (data.signature_moves && data.signature_moves.length > 0) {
+            metricsHtml += '<div><h4 style="color: #667eea; margin-bottom: 15px;">⭐ Your Signature Moves</h4>';
+            data.signature_moves.forEach(move => {
+                metricsHtml += `
+                    <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ffc107;">
+                        <p style="font-weight: 600; color: #f57c00; margin-bottom: 5px;">${move.icon} ${move.move}</p>
+                        <p style="margin-bottom: 5px;"><strong>${move.stat}</strong></p>
+                        <p style="color: #666;">${move.description}</p>
+                    </div>
+                `;
+            });
+            metricsHtml += '</div>';
+        }
+        
+        document.getElementById('keyMetrics').innerHTML = metricsHtml;
+        document.getElementById('trends').textContent = `Week Stats: ${data.week_stats?.total_games || 0} games, ${data.week_stats?.win_rate?.toFixed(1) || 0}% win rate`;
+        
+        // Hide tabs for weekly summary (use overview only)
+        document.querySelectorAll('.tab').forEach(tab => {
+            if (tab.getAttribute('data-tab') !== 'overview') {
+                tab.style.display = 'none';
+            }
+        });
     } else if (actionType === 'year-summary') {
         // Display year summary
         document.getElementById('keyMetrics').innerHTML = formatYearSummary(data.summary || {});

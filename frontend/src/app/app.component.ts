@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { PlayerInsightsComponent } from './player-insights/player-insights.component';
 import { ZaahenComponent } from './zaahen/zaahen.component';
 import { HeroVideoComponent } from './hero-video/hero-video.component';
+import { YearSummaryComponent } from './year-summary/year-summary.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, PlayerInsightsComponent, ZaahenComponent, HeroVideoComponent],
+  imports: [CommonModule, PlayerInsightsComponent, ZaahenComponent, HeroVideoComponent, YearSummaryComponent],
   template: `
     <nav class="navbar">
       <div class="navbar-logo">RIFT REWIND</div>
@@ -28,12 +29,13 @@ import { HeroVideoComponent } from './hero-video/hero-video.component';
       </div>
     </nav>
     
-    <app-hero-video (navigateToInsights)="onNavigateToInsights()"></app-hero-video>
+    <app-hero-video *ngIf="activeTab !== 'zaahen'" (navigateToInsights)="onNavigateToInsights()"></app-hero-video>
     
-    <div class="tab-content" #tabContent>
+    <div class="tab-content" #tabContent [class.zaahen-page-active]="activeTab === 'zaahen'">
       <app-player-insights *ngIf="activeTab === 'insights'"></app-player-insights>
+      <app-year-summary *ngIf="activeTab === 'year-summary'"></app-year-summary>
       <app-zaahen *ngIf="activeTab === 'zaahen'"></app-zaahen>
-      <div *ngIf="activeTab !== 'insights' && activeTab !== 'zaahen'" class="coming-soon">
+      <div *ngIf="activeTab !== 'insights' && activeTab !== 'year-summary' && activeTab !== 'zaahen'" class="coming-soon">
         <h2>COMING SOON</h2>
         <p>This feature is under development.</p>
         <p style="font-size: 0.8em; margin-top: 10px; color: var(--text-muted);">Debug: Active Tab = "{{ activeTab }}"</p>
@@ -44,6 +46,7 @@ import { HeroVideoComponent } from './hero-video/hero-video.component';
     :host {
       display: block;
       min-height: 100vh;
+      background: transparent;
     }
     
     .navbar-links a {
@@ -63,12 +66,20 @@ import { HeroVideoComponent } from './hero-video/hero-video.component';
     .tab-content {
       min-height: calc(100vh - 200px);
       scroll-margin-top: 80px; /* Account for navbar + spacing */
+      background: transparent;
+    }
+    
+    .tab-content.zaahen-page-active {
+      min-height: calc(100vh - 80px);
+      padding: 0;
+      margin: 0;
     }
     
     .coming-soon {
       text-align: center;
       padding: 100px 20px;
       color: var(--text-secondary);
+      background: transparent;
     }
     
     .coming-soon h2 {
@@ -89,7 +100,7 @@ import { HeroVideoComponent } from './hero-video/hero-video.component';
 export class AppComponent {
   @ViewChild('tabContent') tabContent!: any;
   
-  title = 'Rift Rewind - Hall of Legends';
+  title = 'Rift Rewind';
   activeTab = 'insights';
   
   setActiveTab(tab: string) {
@@ -99,8 +110,58 @@ export class AppComponent {
       this.activeTab = tab;
       console.log('[AppComponent] New activeTab:', this.activeTab);
       console.log('[AppComponent] Tab switched successfully');
+      
+      // Scroll to top for zaahen tab (it's a full page without hero)
+      if (tab === 'zaahen') {
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          console.log('[AppComponent] Scrolled to top for Zaahen page');
+        }, 100);
+      }
     } catch (error) {
       console.error('[AppComponent] Error setting active tab:', error);
+    }
+  }
+  
+  private scrollToTabContent(): void {
+    console.log('[AppComponent] scrollToTabContent called');
+    const heroSection = document.querySelector('app-hero-video');
+    const tabContentElement = document.querySelector('.tab-content');
+    const navbar = document.querySelector('.navbar');
+    
+    if (heroSection && tabContentElement) {
+      const navbarHeight = navbar ? navbar.getBoundingClientRect().height : 60;
+      
+      // Get the hero container which has min-height: 350vh
+      const heroContainer = heroSection.querySelector('.container-scroll');
+      
+      if (heroContainer) {
+        // Get the bottom of the hero container in document coordinates
+        const heroRect = heroContainer.getBoundingClientRect();
+        const heroBottom = heroRect.bottom + window.pageYOffset;
+        
+        // Scroll to just past the hero container so tab content is visible
+        const scrollTarget = heroBottom - navbarHeight + 40;
+        
+        console.log('[AppComponent] Scrolling to:', scrollTarget);
+        window.scrollTo({ 
+          top: Math.max(0, scrollTarget), 
+          behavior: 'smooth' 
+        });
+      } else {
+        // Fallback: scroll to tab content directly
+        const tabRect = tabContentElement.getBoundingClientRect();
+        const elementTop = tabRect.top + window.pageYOffset;
+        const scrollTarget = elementTop - navbarHeight - 20;
+        
+        console.log('[AppComponent] Scrolling to tab content:', scrollTarget);
+        window.scrollTo({ 
+          top: Math.max(0, scrollTarget), 
+          behavior: 'smooth' 
+        });
+      }
+    } else {
+      console.warn('[AppComponent] Hero section or tab content not found');
     }
   }
   

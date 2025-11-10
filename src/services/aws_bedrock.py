@@ -128,6 +128,152 @@ Be creative, personal, and exciting! This should feel like a personalized year-i
         
         return self._invoke_model(prompt, max_tokens=2000)
     
+    def generate_creative_year_summary(self, year_stats: Dict, highlights: List[Dict], 
+                                       persistent_strengths: List[Dict], 
+                                       improvements: List[Dict]) -> Dict:
+        """Generate a creative, fun year-end summary with multiple formats."""
+        prompt = f"""
+Create a fun, engaging, and highly shareable year-end summary for a League of Legends player. 
+Make it creative, celebratory, and personalized using AWS Bedrock's generative AI capabilities.
+
+Year Statistics:
+{json.dumps(year_stats, indent=2)}
+
+Key Highlights:
+{json.dumps(highlights, indent=2)}
+
+Persistent Strengths (patterns that appeared consistently):
+{json.dumps(persistent_strengths, indent=2)}
+
+Improvements Made:
+{json.dumps(improvements, indent=2)}
+
+Generate the following in JSON format:
+{{
+    "narrative_summary": "A 2-3 paragraph engaging story of their year, written in a celebratory and reflective tone",
+    "fun_facts": ["fact1", "fact2", "fact3"],
+    "achievement_highlights": ["highlight1", "highlight2", "highlight3"],
+    "memorable_moments": ["moment1", "moment2", "moment3"],
+    "personalized_title": "A creative, personalized title for their year (e.g., 'The Year of the Carry', 'The Climb Chronicles')",
+    "social_media_caption": "A short, shareable caption for social media (1-2 sentences)",
+    "year_in_numbers": {{
+        "most_played_champion": "champion name",
+        "total_games": number,
+        "win_rate": percentage,
+        "biggest_improvement": "description",
+        "longest_streak": number
+    }},
+    "reflection_questions": ["question1", "question2", "question3"]
+}}
+
+Make it fun, personal, and exciting! Use emojis where appropriate. This should be something they want to share with friends.
+"""
+        
+        response = self._invoke_model(prompt, max_tokens=3000)
+        try:
+            # Extract JSON from response
+            json_start = response.find('{')
+            json_end = response.rfind('}') + 1
+            if json_start != -1 and json_end > json_start:
+                return json.loads(response[json_start:json_end])
+        except:
+            pass
+        
+        # Fallback
+        return {
+            "narrative_summary": response[:500],
+            "fun_facts": ["Played many games", "Improved over time", "Had fun"],
+            "achievement_highlights": highlights[:3],
+            "personalized_title": f"My {year_stats.get('year', 2024)} League Journey",
+            "social_media_caption": f"Check out my {year_stats.get('year', 2024)} League recap! 🎮"
+        }
+    
+    def generate_playstyle_comparison(self, player1_playstyle: Dict, player2_playstyle: Dict,
+                                     comparison_data: Dict) -> str:
+        """Generate a creative playstyle comparison narrative."""
+        prompt = f"""
+Create an engaging, fun comparison between two League of Legends players that highlights how their playstyles complement each other or differ.
+
+Player 1 Playstyle:
+{json.dumps(player1_playstyle, indent=2)}
+
+Player 2 Playstyle:
+{json.dumps(player2_playstyle, indent=2)}
+
+Comparison Data:
+{json.dumps(comparison_data, indent=2)}
+
+Write a 2-3 paragraph comparison that:
+- Highlights how their playstyles complement each other (if they do)
+- Shows what makes each player unique
+- Suggests how they could work together as a duo
+- Uses a friendly, engaging tone
+- Makes it shareable and fun to read
+- Identifies synergy points and complementary strengths
+
+Be creative and focus on the fun aspects of comparing playstyles!
+"""
+        
+        return self._invoke_model(prompt, max_tokens=2000)
+    
+    def generate_progress_narrative(self, progress_data: Dict) -> str:
+        """Generate a narrative about player progress over time."""
+        prompt = f"""
+Create an engaging narrative about a League of Legends player's progress over time, highlighting their journey, improvements, and persistent patterns.
+
+Progress Data:
+{json.dumps(progress_data, indent=2)}
+
+Write a 2-3 paragraph narrative that:
+- Tells the story of their progress journey
+- Highlights persistent strengths that define their playstyle
+- Celebrates improvements and growth
+- Identifies areas that need attention
+- Uses an encouraging, reflective tone
+- Makes them feel proud of their progress
+- Sparks motivation for continued improvement
+
+Be personal, encouraging, and celebratory of their growth!
+"""
+        
+        return self._invoke_model(prompt, max_tokens=2000)
+    
+    def generate_shareable_moment(self, moment_data: Dict, moment_type: str = "achievement") -> Dict:
+        """Generate creative shareable content for a specific moment."""
+        prompt = f"""
+Create fun, engaging, shareable social media content for a League of Legends {moment_type}.
+
+Moment Data:
+{json.dumps(moment_data, indent=2)}
+
+Generate the following in JSON format:
+{{
+    "title": "Creative, catchy title",
+    "caption": "Engaging social media caption (1-2 sentences)",
+    "hashtags": ["tag1", "tag2", "tag3"],
+    "celebration_text": "Short celebration message",
+    "fun_fact": "A fun fact about this achievement/moment"
+}}
+
+Make it exciting, celebratory, and shareable! Use emojis and make it fun.
+"""
+        
+        response = self._invoke_model(prompt, max_tokens=1000)
+        try:
+            json_start = response.find('{')
+            json_end = response.rfind('}') + 1
+            if json_start != -1 and json_end > json_start:
+                return json.loads(response[json_start:json_end])
+        except:
+            pass
+        
+        # Fallback
+        return {
+            "title": f"🎉 {moment_type.title()}!",
+            "caption": f"Just achieved: {moment_data.get('description', '')} 🎮",
+            "hashtags": ["#LeagueOfLegends", "#RiftRewind", "#Gaming"]
+        }
+    
     def generate_match_analysis(self, match: Dict, player_data: Dict) -> str:
         """Generate detailed analysis for a specific match."""
         prompt = f"""

@@ -5,8 +5,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --output-path=static/angular --base-href=/",
-    "watch": "ng build --watch --output-path=static/angular --base-href=/",
+    "build": "ng build --output-path=../static/angular --base-href=/",
+    "watch": "ng build --watch --output-path=../static/angular --base-href=/",
     "test": "ng test"
   },
   "private": true,

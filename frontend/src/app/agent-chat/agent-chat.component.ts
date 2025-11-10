@@ -23,7 +23,7 @@ interface ChatMessage {
       <div class="chat-messages" #chatMessagesContainer>
         <div *ngIf="messages.length === 0" class="welcome-message">
           <div class="welcome-icon">🤖</div>
-          <h3>Welcome to the Hall of Legends AI Coach</h3>
+          <h3>Welcome to the Rift Rewind AI Coach</h3>
           <p>I'm here to help you improve your League of Legends gameplay. Ask me about:</p>
           <ul>
             <li>Strategy and tactics</li>

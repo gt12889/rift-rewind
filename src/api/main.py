@@ -27,6 +27,7 @@ from src.analyzers.year_summary import YearSummaryGenerator
 from src.analyzers.rank_comparison import RankComparisonAnalyzer
 from src.generators.visualizations import VisualizationGenerator
 from src.generators.social_content import SocialContentGenerator
+from src.generators.weekly_summary import WeeklySummaryGenerator
 from src.agents.context_manager import ContextManager
 from src.agents.registry import AgentRegistry
 from src.agents.orchestrator import Orchestrator
@@ -62,6 +63,7 @@ year_summary_gen = YearSummaryGenerator()
 rank_comparison = RankComparisonAnalyzer()
 viz_generator = VisualizationGenerator()
 social_generator = SocialContentGenerator()
+weekly_summary_gen = WeeklySummaryGenerator()
 
 # Initialize multi-agent system
 context_manager = ContextManager()
@@ -89,6 +91,13 @@ class PlayerInsightsResponse(BaseModel):
     rank_comparisons: Optional[dict] = None
     visualizations: Optional[dict] = None
 
+
+class WeeklySummaryResponse(BaseModel):
+    summary_30_seconds: str
+    total_games: int
+    highlights: List[dict]
+    signature_moves: List[dict]
+    week_stats: Optional[dict] = None
 
 class YearSummaryResponse(BaseModel):
     year: int
@@ -236,6 +245,34 @@ async def get_player_insights(
             rank_comparisons=rank_comparisons,
             visualizations=visualizations
         )
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/player/{summoner_name}/weekly-summary", response_model=WeeklySummaryResponse)
+async def get_weekly_summary(
+    summoner_name: str,
+    region: str = Query(default="na1", description="League region"),
+    days: int = Query(default=7, ge=1, le=30, description="Number of days to include")
+):
+    """Get weekly summary with highlights and signature moves."""
+    try:
+        # Get summoner info
+        summoner = riot_client.get_summoner_by_name(summoner_name, region)
+        puuid = summoner.get("puuid")
+        
+        if not puuid:
+            raise HTTPException(status_code=404, detail="Summoner not found")
+        
+        # Get match history (more matches for weekly summary)
+        match_ids = riot_client.get_match_history(puuid, count=100)
+        matches = [riot_client.get_match_details(mid) for mid in match_ids[:100]]
+        
+        # Generate weekly summary
+        weekly_summary = weekly_summary_gen.generate_weekly_summary(matches, puuid, days=days)
+        
+        return WeeklySummaryResponse(**weekly_summary)
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -473,7 +510,7 @@ if os.path.exists(angular_dir):
             logger.info("Serving Angular index.html")
             return FileResponse(index_path)
         logger.warning("Angular index.html not found, returning error message")
-        return {"message": "Angular app not found. Run 'npm run build' in the frontend directory."}
+        return {"message": "Angular app not found. Run 'npm run build' in the frontend directory (cd frontend && npm run build)."}
     
     # Serve Angular static files (JS, CSS, etc.) from root path
     # Since base-href is "/", we mount at root with html=True for SPA routing

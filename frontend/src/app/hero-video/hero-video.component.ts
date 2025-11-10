@@ -8,20 +8,19 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
   imports: [CommonModule],
   template: `
     <div class="container-scroll" #containerScroll>
-      <div class="container-sticky">
+      <div class="container-sticky" [style.background-image]="'url(' + hallBackgroundSrc + ')'">
         <div 
           class="container-animated"
           [@fadeIn]="isVisible"
           [style.transform]="'translateY(' + animatedY + 'px)'"
         >
           <h1 class="hero-title">
-            HALL<br>
-            <span class="title-small">of</span><br>
-            LEGENDS
+            RIFT<br>
+            REWIND
           </h1>
           <p class="hero-description">
-            Enter the Hall of Legends and discover your legacy. Analyze your matches, 
-            uncover your strengths, and forge your path to greatness in the Rift.
+            Rewind your journey through the Rift. Analyze your matches, 
+            uncover your strengths, and forge your path to greatness.
           </p>
         </div>
 
@@ -76,13 +75,34 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       justify-content: center;
       padding: 60px 20px;
       overflow: hidden;
-      background: radial-gradient(ellipse at center, rgba(240, 240, 245, 0.95) 0%, rgba(220, 220, 230, 0.9) 30%, rgba(200, 200, 210, 0.85) 60%, rgba(180, 180, 190, 0.8) 100%);
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    .container-sticky::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(10, 10, 20, 0.4) 0%,
+        rgba(15, 15, 30, 0.3) 50%,
+        rgba(10, 10, 20, 0.5) 100%
+      );
+      z-index: 1;
+      pointer-events: none;
     }
 
     .container-animated {
       text-align: center;
       margin-bottom: 40px;
       z-index: 10;
+      position: relative;
     }
 
     .hero-title {
@@ -90,28 +110,52 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.2em;
-      color: #f4d03f;
+      color: #ffffff;
       text-shadow: 
-        0 0 10px rgba(244, 208, 63, 0.4),
-        0 0 20px rgba(244, 208, 63, 0.2);
+        0 2px 10px rgba(0, 0, 0, 0.8),
+        0 4px 20px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(255, 255, 255, 0.3),
+        0 0 60px rgba(192, 192, 255, 0.2);
       margin-bottom: 20px;
       line-height: 1.2;
-    }
-
-    .title-small {
-      font-size: 0.6em;
-      font-weight: 400;
-      letter-spacing: 0.3em;
-      color: rgba(120, 120, 140, 0.9);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     .hero-description {
-      font-size: 1.1em;
-      color: rgba(100, 100, 120, 0.9);
-      max-width: 42ch;
+      font-size: 1.25em;
+      color: rgba(248, 248, 255, 0.96);
+      max-width: 54ch;
       margin: 0 auto;
-      line-height: 1.8;
-      opacity: 0.9;
+      line-height: 1.95;
+      opacity: 1;
+      text-shadow: 
+        0 2px 14px rgba(0, 0, 0, 0.85),
+        0 4px 28px rgba(0, 0, 0, 0.65),
+        0 1px 3px rgba(212, 175, 55, 0.2),
+        0 0 20px rgba(212, 175, 55, 0.1),
+        0 0 40px rgba(212, 175, 55, 0.05);
+      font-weight: 350;
+      font-family: 'Cormorant Garamond', 'Georgia', 'Palatino', 'Times New Roman', serif;
+      letter-spacing: 0.04em;
+      font-style: normal;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .hero-description::first-letter {
+      color: rgba(212, 175, 55, 0.95);
+      font-size: 1.5em;
+      font-weight: 600;
+      float: left;
+      line-height: 0.8;
+      margin-right: 6px;
+      margin-top: 4px;
+      text-shadow: 
+        0 0 14px rgba(212, 175, 55, 0.6),
+        0 0 28px rgba(212, 175, 55, 0.3),
+        0 2px 6px rgba(0, 0, 0, 0.6);
+      font-family: 'Cormorant Garamond', serif;
     }
 
     .container-inset {
@@ -122,29 +166,35 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       width: auto;
       padding: 24px 0;
       margin: 20px 0;
+      z-index: 5;
     }
 
     .hero-image {
       position: relative;
-      z-index: 10;
+      z-index: 5;
       height: auto;
       max-height: 600px;
       max-width: 100%;
       width: auto;
       object-fit: contain;
       border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.6),
+        0 0 40px rgba(255, 255, 255, 0.1);
+      filter: brightness(1.1) contrast(1.05);
     }
 
     .container-animated-button {
       margin-top: 20px;
       z-index: 10;
+      position: relative;
     }
 
     .hero-button {
-      background: rgba(60, 60, 70, 0.9);
-      border: 2px solid rgba(244, 208, 63, 0.6);
-      color: #f4d03f;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
       padding: 14px 32px;
       font-size: 1em;
       font-weight: 700;
@@ -153,13 +203,18 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       cursor: pointer;
       transition: all 0.3s ease;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.1);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 
     .hero-button:hover {
-      background: rgba(70, 70, 80, 0.95);
-      border-color: rgba(244, 208, 63, 0.8);
-      box-shadow: 0 6px 20px rgba(244, 208, 63, 0.3);
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(255, 255, 255, 0.2);
       transform: translateY(-2px);
     }
 
@@ -213,6 +268,10 @@ export class HeroVideoComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('heroImage', { static: false }) heroImage!: ElementRef<HTMLImageElement>;
   @Output() navigateToInsights = new EventEmitter<void>();
 
+  // Hall background image - majestic futuristic/fantasy architecture
+  // The image should be in frontend/src/assets/ and will be copied to assets/ during build
+  hallBackgroundSrc = 'assets/hall-background.jpg';
+  
   // Garen - The Might of Demacia hero image
   // Using Skin_Splash_Classic_Garen.webp from assets folder
   imageSrc = 'assets/Skin_Splash_Classic_Garen.webp';
@@ -229,8 +288,6 @@ export class HeroVideoComponent implements OnInit, AfterViewInit, OnDestroy {
       (imageContainer as HTMLElement).style.display = 'none';
     }
   }
-  // Soft gray background with radial gradient - lighter in center, darker at edges
-  backgroundGradient = 'radial-gradient(ellipse at center, rgba(240, 240, 245, 0.95) 0%, rgba(220, 220, 230, 0.9) 30%, rgba(200, 200, 210, 0.85) 60%, rgba(180, 180, 190, 0.8) 100%)';
   
   isVisible = false;
   animatedY = 80;

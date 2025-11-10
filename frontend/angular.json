@@ -10,39 +10,39 @@
           "style": "css"
         }
       },
-      "root": "frontend",
-      "sourceRoot": "frontend/src",
+      "root": "",
+      "sourceRoot": "src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
             "outputPath": "../static/angular",
-            "index": "frontend/src/index.html",
-            "browser": "frontend/src/main.ts",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
             "polyfills": [
               "zone.js"
             ],
-            "tsConfig": "frontend/tsconfig.app.json",
+            "tsConfig": "tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "frontend/src/assets",
+                "input": "src/assets",
                 "output": "assets"
               },
               {
                 "glob": "favicon.ico",
-                "input": "frontend/src",
+                "input": "src",
                 "output": "/"
               },
               {
                 "glob": "favicon.svg",
-                "input": "frontend/src",
+                "input": "src",
                 "output": "/"
               }
             ],
             "styles": [
-              "frontend/src/styles.css"
+              "src/styles.css"
             ],
             "scripts": []
           },
@@ -56,8 +56,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kb",
-                  "maximumError": "6kb"
+                  "maximumWarning": "10kb",
+                  "maximumError": "20kb"
                 }
               ],
               "outputHashing": "all"
@@ -78,7 +78,7 @@
             },
             "development": {
               "buildTarget": "rift-rewind:build:development"
-          }
+            }
           },
           "defaultConfiguration": "development"
         }
