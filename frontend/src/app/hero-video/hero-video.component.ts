@@ -8,7 +8,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
   imports: [CommonModule],
   template: `
     <div class="container-scroll" #containerScroll>
-      <div class="container-sticky" [style.background]="backgroundGradient">
+      <div class="container-sticky">
         <div 
           class="container-animated"
           [@fadeIn]="isVisible"
@@ -29,18 +29,14 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
           class="container-inset"
           [style.clip-path]="clipPath"
         >
-          <video
-            #heroVideo
-            class="hero-video"
-            [style.transform]="'scale(' + videoScale + ')'"
-            autoplay
-            muted
-            loop
-            playsinline
-          >
-            <source [src]="videoSrc" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
+          <img
+            #heroImage
+            class="hero-image"
+            [src]="imageSrc"
+            [alt]="'Garen - The Might of Demacia'"
+            [style.transform]="'scale(' + imageScale + ')'"
+            (error)="onImageError()"
+          />
         </div>
 
         <div 
@@ -78,8 +74,9 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 40px 20px;
+      padding: 60px 20px;
       overflow: hidden;
+      background: radial-gradient(ellipse at center, rgba(240, 240, 245, 0.95) 0%, rgba(220, 220, 230, 0.9) 30%, rgba(200, 200, 210, 0.85) 60%, rgba(180, 180, 190, 0.8) 100%);
     }
 
     .container-animated {
@@ -93,11 +90,10 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.2em;
-      color: var(--metallic-gold);
+      color: #f4d03f;
       text-shadow: 
-        0 0 10px rgba(212, 175, 55, 0.5),
-        0 0 20px rgba(212, 175, 55, 0.3),
-        0 0 30px rgba(212, 175, 55, 0.2);
+        0 0 10px rgba(244, 208, 63, 0.4),
+        0 0 20px rgba(244, 208, 63, 0.2);
       margin-bottom: 20px;
       line-height: 1.2;
     }
@@ -106,16 +102,16 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       font-size: 0.6em;
       font-weight: 400;
       letter-spacing: 0.3em;
-      color: rgba(100, 100, 120, 0.9);
+      color: rgba(120, 120, 140, 0.9);
     }
 
     .hero-description {
-      font-size: 1.2em;
-      color: rgba(80, 80, 100, 0.9);
+      font-size: 1.1em;
+      color: rgba(100, 100, 120, 0.9);
       max-width: 42ch;
       margin: 0 auto;
-      line-height: 1.6;
-      opacity: 0.85;
+      line-height: 1.8;
+      opacity: 0.9;
     }
 
     .container-inset {
@@ -128,14 +124,16 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       margin: 20px 0;
     }
 
-    .hero-video {
+    .hero-image {
       position: relative;
       z-index: 10;
       height: auto;
-      max-height: 100%;
+      max-height: 600px;
       max-width: 100%;
-      border-radius: 16px;
-      box-shadow: 0 0 40px rgba(212, 175, 55, 0.4), 0 0 60px rgba(59, 130, 246, 0.2);
+      width: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
 
     .container-animated-button {
@@ -144,9 +142,9 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
     }
 
     .hero-button {
-      background: rgba(5, 5, 8, 0.2);
-      border: 2px solid rgba(212, 175, 55, 0.5);
-      color: var(--metallic-gold);
+      background: rgba(60, 60, 70, 0.9);
+      border: 2px solid rgba(244, 208, 63, 0.6);
+      color: #f4d03f;
       padding: 14px 32px;
       font-size: 1em;
       font-weight: 700;
@@ -154,14 +152,14 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       letter-spacing: 0.1em;
       cursor: pointer;
       transition: all 0.3s ease;
-      border-radius: 0;
-      box-shadow: 0 4px 24px rgba(212, 175, 55, 0.3);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .hero-button:hover {
-      background: rgba(5, 5, 8, 0.5);
-      border-color: rgba(212, 175, 55, 0.8);
-      box-shadow: 0 4px 30px rgba(212, 175, 55, 0.5);
+      background: rgba(70, 70, 80, 0.95);
+      border-color: rgba(244, 208, 63, 0.8);
+      box-shadow: 0 6px 20px rgba(244, 208, 63, 0.3);
       transform: translateY(-2px);
     }
 
@@ -212,17 +210,32 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 })
 export class HeroVideoComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('containerScroll', { static: false }) containerScroll!: ElementRef;
-  @ViewChild('heroVideo', { static: false }) heroVideo!: ElementRef<HTMLVideoElement>;
+  @ViewChild('heroImage', { static: false }) heroImage!: ElementRef<HTMLImageElement>;
   @Output() navigateToInsights = new EventEmitter<void>();
 
-  videoSrc = 'https://videos.pexels.com/video-files/8566672/8566672-uhd_2560_1440_30fps.mp4';
-  // Majestic hall theme: whites, silvers, light grays with blue and gold accents
-  backgroundGradient = 'radial-gradient(40% 40% at 50% 20%, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 245, 0.9) 15%, rgba(220, 220, 230, 0.85) 30%, rgba(200, 200, 210, 0.8) 50%, rgba(180, 180, 190, 0.75) 70%, rgba(160, 160, 170, 0.7) 88.54%), linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(212, 175, 55, 0.1) 50%, rgba(59, 130, 246, 0.15) 100%)';
+  // Garen - The Might of Demacia hero image
+  // Using Skin_Splash_Classic_Garen.webp from assets folder
+  imageSrc = 'assets/Skin_Splash_Classic_Garen.webp';
+  
+  // Fallback if image fails to load
+  onImageError() {
+    console.warn('Hero image failed to load. Please check:');
+    console.warn('1. Image file exists at: frontend/src/assets/Skin_Splash_Classic_Garen.webp');
+    console.warn('2. Filename matches imageSrc in component (currently: ' + this.imageSrc + ')');
+    console.warn('3. File format is supported (.jpg, .jpeg, .png, .webp)');
+    // Hide the image container on error
+    const imageContainer = document.querySelector('.container-inset');
+    if (imageContainer) {
+      (imageContainer as HTMLElement).style.display = 'none';
+    }
+  }
+  // Soft gray background with radial gradient - lighter in center, darker at edges
+  backgroundGradient = 'radial-gradient(ellipse at center, rgba(240, 240, 245, 0.95) 0%, rgba(220, 220, 230, 0.9) 30%, rgba(200, 200, 210, 0.85) 60%, rgba(180, 180, 190, 0.8) 100%)';
   
   isVisible = false;
   animatedY = 80;
   buttonY = -120;
-  videoScale = 0.7;
+  imageScale = 0.7;
   clipPath = 'inset(45% 45% 45% 45% round 1000px)';
   buttonHoverState = 'idle';
 
@@ -279,8 +292,8 @@ export class HeroVideoComponent implements OnInit, AfterViewInit, OnDestroy {
       // Animate button Y position (-120px to 0)
       this.buttonY = -120 + (scrollProgress * 120);
       
-      // Animate video scale (0.7 to 1)
-      this.videoScale = 0.7 + (scrollProgress * 0.3);
+      // Animate image scale (0.7 to 1)
+      this.imageScale = 0.7 + (scrollProgress * 0.3);
       
       // Animate clip path inset (45% to 0%)
       const inset = 45 - (scrollProgress * 45);

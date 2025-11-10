@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
@@ -520,7 +520,7 @@ interface ChatMessage {
     }
   `]
 })
-export class ZaahenComponent implements OnInit, AfterViewChecked {
+export class ZaahenComponent implements OnInit, OnDestroy, AfterViewInit, AfterViewChecked {
   messages: ChatMessage[] = [];
   userMessage: string = '';
   isLoading: boolean = false;
@@ -528,18 +528,51 @@ export class ZaahenComponent implements OnInit, AfterViewChecked {
   @ViewChild('chatMessagesContainer') private chatContainer!: ElementRef;
   @ViewChild('messageInput') private messageInput!: ElementRef<HTMLTextAreaElement>;
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService) {
+    console.log('[ZaahenComponent] Constructor called');
+    console.log('[ZaahenComponent] ApiService:', apiService ? 'Available' : 'NULL/MISSING');
+    if (!apiService) {
+      console.error('[ZaahenComponent] ERROR: ApiService is not injected!');
+    }
+  }
 
   ngOnInit(): void {
+    console.log('[ZaahenComponent] ngOnInit called');
+    console.log('[ZaahenComponent] Component initialized');
+    console.log('[ZaahenComponent] Initial messages count:', this.messages.length);
+  }
+
+  ngAfterViewInit(): void {
+    console.log('[ZaahenComponent] ngAfterViewInit called');
+    console.log('[ZaahenComponent] View initialized');
+    console.log('[ZaahenComponent] chatContainer:', this.chatContainer ? 'Found' : 'Not found');
+    console.log('[ZaahenComponent] messageInput:', this.messageInput ? 'Found' : 'Not found');
+    
     // Auto-focus the input when component loads
     setTimeout(() => {
-      if (this.messageInput) {
-        this.messageInput.nativeElement.focus();
+      try {
+        if (this.messageInput?.nativeElement) {
+          this.messageInput.nativeElement.focus();
+          console.log('[ZaahenComponent] Input focused successfully');
+        } else {
+          console.warn('[ZaahenComponent] messageInput or nativeElement not found');
+          console.warn('[ZaahenComponent] messageInput:', this.messageInput);
+        }
+      } catch (error) {
+        console.error('[ZaahenComponent] Error focusing input:', error);
       }
-    }, 100);
+    }, 200);
+  }
+
+  ngOnDestroy(): void {
+    console.log('[ZaahenComponent] ngOnDestroy called - component is being destroyed');
   }
 
   ngAfterViewChecked(): void {
+    // Only log occasionally to avoid spam
+    if (Math.random() < 0.01) {
+      console.log('[ZaahenComponent] ngAfterViewChecked called');
+    }
     this.scrollToBottom();
   }
 
@@ -549,7 +582,7 @@ export class ZaahenComponent implements OnInit, AfterViewChecked {
         this.chatContainer.nativeElement.scrollTop = this.chatContainer.nativeElement.scrollHeight;
       }
     } catch (err) {
-      // Ignore scroll errors
+      console.error('[ZaahenComponent] Error scrolling to bottom:', err);
     }
   }
 
@@ -562,7 +595,12 @@ export class ZaahenComponent implements OnInit, AfterViewChecked {
   }
 
   async sendMessage(): Promise<void> {
+    console.log('[ZaahenComponent] sendMessage called');
+    console.log('[ZaahenComponent] userMessage:', this.userMessage);
+    console.log('[ZaahenComponent] isLoading:', this.isLoading);
+    
     if (!this.userMessage.trim() || this.isLoading) {
+      console.log('[ZaahenComponent] Message empty or already loading, returning');
       return;
     }
 
@@ -577,6 +615,7 @@ export class ZaahenComponent implements OnInit, AfterViewChecked {
       timestamp: new Date()
     };
     this.messages.push(userMessage);
+    console.log('[ZaahenComponent] User message added to chat. Total messages:', this.messages.length);
 
     this.isLoading = true;
 
@@ -589,9 +628,13 @@ export class ZaahenComponent implements OnInit, AfterViewChecked {
           role: msg.role,
           content: msg.content
         }));
+      
+      console.log('[ZaahenComponent] Conversation history:', conversationHistory);
+      console.log('[ZaahenComponent] Calling API service...');
 
       // Call API
       const response = await this.apiService.chatWithAgent(userMsg, null, conversationHistory);
+      console.log('[ZaahenComponent] API response received:', response);
 
       // Add assistant response to chat
       this.messages.push({
@@ -599,11 +642,21 @@ export class ZaahenComponent implements OnInit, AfterViewChecked {
         content: response.response,
         timestamp: new Date()
       });
+      console.log('[ZaahenComponent] Assistant message added. Total messages:', this.messages.length);
     } catch (error: any) {
-      this.error = error.message || 'Failed to get response from Zaahen. Please try again.';
-      console.error('Chat error:', error);
+      console.error('[ZaahenComponent] Error in sendMessage:', error);
+      console.error('[ZaahenComponent] Error details:', {
+        message: error?.message,
+        status: error?.status,
+        error: error?.error,
+        stack: error?.stack
+      });
+      this.error = error.message || error?.error?.message || 'Failed to get response from Zaahen. Please try again.';
+      console.error('[ZaahenComponent] Error message set:', this.error);
     } finally {
       this.isLoading = false;
+      console.log('[ZaahenComponent] Loading complete');
+      
       // Auto-resize textarea
       this.adjustTextareaHeight();
       // Focus back on input
@@ -616,10 +669,14 @@ export class ZaahenComponent implements OnInit, AfterViewChecked {
   }
 
   adjustTextareaHeight(): void {
-    if (this.messageInput) {
-      const textarea = this.messageInput.nativeElement;
-      textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+    try {
+      if (this.messageInput) {
+        const textarea = this.messageInput.nativeElement;
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+      }
+    } catch (error) {
+      console.error('[ZaahenComponent] Error adjusting textarea height:', error);
     }
   }
 

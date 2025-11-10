@@ -36,6 +36,7 @@ import { HeroVideoComponent } from './hero-video/hero-video.component';
       <div *ngIf="activeTab !== 'insights' && activeTab !== 'zaahen'" class="coming-soon">
         <h2>COMING SOON</h2>
         <p>This feature is under development.</p>
+        <p style="font-size: 0.8em; margin-top: 10px; color: var(--text-muted);">Debug: Active Tab = "{{ activeTab }}"</p>
       </div>
     </div>
   `,
@@ -92,7 +93,15 @@ export class AppComponent {
   activeTab = 'insights';
   
   setActiveTab(tab: string) {
-    this.activeTab = tab;
+    console.log('[AppComponent] setActiveTab called with:', tab);
+    console.log('[AppComponent] Previous activeTab:', this.activeTab);
+    try {
+      this.activeTab = tab;
+      console.log('[AppComponent] New activeTab:', this.activeTab);
+      console.log('[AppComponent] Tab switched successfully');
+    } catch (error) {
+      console.error('[AppComponent] Error setting active tab:', error);
+    }
   }
   
   onNavigateToInsights() {

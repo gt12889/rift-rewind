@@ -34,6 +34,12 @@ export class ApiService {
   
   chatWithAgent(message: string, context: string | null = null, conversationHistory: any[] = []): Promise<any> {
     const url = `${this.apiBase}/api/agent/chat`;
+    console.log('[ApiService] chatWithAgent called');
+    console.log('[ApiService] URL:', url);
+    console.log('[ApiService] Message:', message);
+    console.log('[ApiService] Context:', context);
+    console.log('[ApiService] Conversation history length:', conversationHistory.length);
+    
     const body = {
       message: message,
       context: context,
@@ -42,9 +48,23 @@ export class ApiService {
         content: msg.content
       }))
     };
-    return this.http.post(url, body).pipe(
-      catchError(this.handleError)
-    ).toPromise() as Promise<any>;
+    
+    console.log('[ApiService] Request body:', JSON.stringify(body, null, 2));
+    
+    try {
+      return this.http.post(url, body).pipe(
+        catchError((error) => {
+          console.error('[ApiService] Error in chatWithAgent:', error);
+          console.error('[ApiService] Error status:', error.status);
+          console.error('[ApiService] Error message:', error.message);
+          console.error('[ApiService] Error details:', error.error);
+          return this.handleError(error);
+        })
+      ).toPromise() as Promise<any>;
+    } catch (error) {
+      console.error('[ApiService] Exception in chatWithAgent:', error);
+      throw error;
+    }
   }
   
   private handleError(error: HttpErrorResponse): Observable<never> {
