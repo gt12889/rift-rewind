@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, OnInit, OnDestroy, ViewChild, AfterViewInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
@@ -106,16 +106,16 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       font-size: 0.6em;
       font-weight: 400;
       letter-spacing: 0.3em;
-      color: var(--text-secondary);
+      color: rgba(100, 100, 120, 0.9);
     }
 
     .hero-description {
       font-size: 1.2em;
-      color: var(--text-secondary);
+      color: rgba(80, 80, 100, 0.9);
       max-width: 42ch;
       margin: 0 auto;
       line-height: 1.6;
-      opacity: 0.8;
+      opacity: 0.85;
     }
 
     .container-inset {
@@ -135,7 +135,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       max-height: 100%;
       max-width: 100%;
       border-radius: 16px;
-      box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+      box-shadow: 0 0 40px rgba(212, 175, 55, 0.4), 0 0 60px rgba(59, 130, 246, 0.2);
     }
 
     .container-animated-button {
@@ -213,9 +213,11 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 export class HeroVideoComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('containerScroll', { static: false }) containerScroll!: ElementRef;
   @ViewChild('heroVideo', { static: false }) heroVideo!: ElementRef<HTMLVideoElement>;
+  @Output() navigateToInsights = new EventEmitter<void>();
 
   videoSrc = 'https://videos.pexels.com/video-files/8566672/8566672-uhd_2560_1440_30fps.mp4';
-  backgroundGradient = 'radial-gradient(40% 40% at 50% 20%, rgba(14, 25, 174, 0.8) 0%, rgba(11, 19, 135, 0.8) 22.92%, rgba(8, 15, 103, 0.8) 42.71%, rgba(3, 5, 38, 0.8) 88.54%)';
+  // Majestic hall theme: whites, silvers, light grays with blue and gold accents
+  backgroundGradient = 'radial-gradient(40% 40% at 50% 20%, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 245, 0.9) 15%, rgba(220, 220, 230, 0.85) 30%, rgba(200, 200, 210, 0.8) 50%, rgba(180, 180, 190, 0.75) 70%, rgba(160, 160, 170, 0.7) 88.54%), linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(212, 175, 55, 0.1) 50%, rgba(59, 130, 246, 0.15) 100%)';
   
   isVisible = false;
   animatedY = 80;
@@ -292,10 +294,8 @@ export class HeroVideoComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   scrollToInsights() {
-    const insightsElement = document.querySelector('app-player-insights');
-    if (insightsElement) {
-      insightsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // Emit event to parent component to handle navigation
+    this.navigateToInsights.emit();
   }
 }
 

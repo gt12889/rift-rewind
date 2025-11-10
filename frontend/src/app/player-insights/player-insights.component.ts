@@ -27,6 +27,15 @@ interface PlayerInsights {
       hot_streak?: boolean;
     };
   };
+  visualizations?: {
+    phase_heatmap?: string;
+    win_rate_trend?: string;
+    champion_radar?: string;
+    win_rate_chart?: string;
+    kda_trend?: string;
+    champion_performance?: string;
+    role_performance?: string;
+  };
 }
 
 interface YearSummary {
@@ -198,12 +207,117 @@ interface YearSummary {
             </div>
           </div>
         </div>
+        
+        <div *ngIf="activeTab === 'visualizations'" class="tab-content active">
+          <div class="result-card" *ngIf="actionType === 'insights'">
+            <h3>Performance Visualizations</h3>
+            
+            <div *ngIf="getVisualization('phase_heatmap')" class="chart-container">
+              <h4>Performance by Game Phase</h4>
+              <img [src]="'data:image/png;base64,' + getVisualization('phase_heatmap')" 
+                   alt="Performance by Game Phase Heatmap" 
+                   class="chart-image" />
+            </div>
+            
+            <div *ngIf="getVisualization('win_rate_trend')" class="chart-container">
+              <h4>Win Rate Trend Over Time</h4>
+              <img [src]="'data:image/png;base64,' + getVisualization('win_rate_trend')" 
+                   alt="Win Rate Trend" 
+                   class="chart-image" />
+            </div>
+            
+            <div *ngIf="getVisualization('champion_radar')" class="chart-container">
+              <h4>Champion Performance Radar Chart</h4>
+              <img [src]="'data:image/png;base64,' + getVisualization('champion_radar')" 
+                   alt="Champion Performance Radar" 
+                   class="chart-image" />
+            </div>
+            
+            <div *ngIf="getVisualization('win_rate_chart')" class="chart-container">
+              <h4>Win Rate Chart</h4>
+              <img [src]="'data:image/png;base64,' + getVisualization('win_rate_chart')" 
+                   alt="Win Rate Chart" 
+                   class="chart-image" />
+            </div>
+            
+            <div *ngIf="getVisualization('kda_trend')" class="chart-container">
+              <h4>KDA Trend</h4>
+              <img [src]="'data:image/png;base64,' + getVisualization('kda_trend')" 
+                   alt="KDA Trend" 
+                   class="chart-image" />
+            </div>
+            
+            <div *ngIf="getVisualization('champion_performance')" class="chart-container">
+              <h4>Champion Performance</h4>
+              <img [src]="'data:image/png;base64,' + getVisualization('champion_performance')" 
+                   alt="Champion Performance" 
+                   class="chart-image" />
+            </div>
+            
+            <div *ngIf="getVisualization('role_performance')" class="chart-container">
+              <h4>Role Performance</h4>
+              <img [src]="'data:image/png;base64,' + getVisualization('role_performance')" 
+                   alt="Role Performance" 
+                   class="chart-image" />
+            </div>
+            
+            <div *ngIf="!hasAnyVisualizations()" class="no-charts">
+              <p>No visualizations available. Please fetch insights first.</p>
+            </div>
+          </div>
+          
+          <div *ngIf="actionType !== 'insights'" class="result-card">
+            <p>Visualizations are only available for player insights.</p>
+          </div>
+        </div>
       </div>
     </div>
   `,
   styles: [`
     :host {
       display: block;
+    }
+    
+    .chart-container {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(15, 15, 20, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .chart-container:hover {
+      background: rgba(20, 20, 28, 0.8);
+      border-color: rgba(212, 175, 55, 0.3);
+    }
+    
+    .chart-container h4 {
+      margin-bottom: 1rem;
+      color: var(--metallic-gold, #d4af37);
+      font-size: 1.2em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .chart-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .no-charts {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-muted, rgba(255, 255, 255, 0.5));
+    }
+    
+    .no-charts p {
+      font-size: 1.1em;
     }
   `]
 })
@@ -225,7 +339,8 @@ export class PlayerInsightsComponent {
     { id: 'strengths', label: 'Strengths' },
     { id: 'weaknesses', label: 'Weaknesses' },
     { id: 'insights', label: 'Unexpected Insights' },
-    { id: 'recommendations', label: 'Recommendations' }
+    { id: 'recommendations', label: 'Recommendations' },
+    { id: 'visualizations', label: 'Visualizations' }
   ];
   
   constructor(private apiService: ApiService) {}
@@ -454,6 +569,31 @@ export class PlayerInsightsComponent {
     }
     
     return [];
+  }
+  
+  getVisualization(key: string): string | null {
+    if (!this.results || this.actionType !== 'insights') {
+      return null;
+    }
+    
+    const insights = this.results as PlayerInsights;
+    return insights.visualizations?.[key as keyof typeof insights.visualizations] || null;
+  }
+  
+  hasAnyVisualizations(): boolean {
+    if (!this.results || this.actionType !== 'insights') {
+      return false;
+    }
+    
+    const insights = this.results as PlayerInsights;
+    const viz = insights.visualizations;
+    if (!viz) {
+      return false;
+    }
+    
+    return !!(viz.phase_heatmap || viz.win_rate_trend || viz.champion_radar || 
+              viz.win_rate_chart || viz.kda_trend || viz.champion_performance || 
+              viz.role_performance);
   }
 }
 

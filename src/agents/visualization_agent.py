@@ -76,6 +76,22 @@ class VisualizationAgent(BaseAgent):
             except Exception as e:
                 print(f"Error generating role performance: {e}")
             
+            # Generate new visualizations
+            try:
+                visualizations["phase_heatmap"] = self.viz_generator.generate_phase_performance_heatmap(matches, puuid)
+            except Exception as e:
+                print(f"Error generating phase performance heatmap: {e}")
+            
+            try:
+                visualizations["win_rate_trend"] = self.viz_generator.generate_win_rate_trend_line(matches, puuid)
+            except Exception as e:
+                print(f"Error generating win rate trend line: {e}")
+            
+            try:
+                visualizations["champion_radar"] = self.viz_generator.generate_champion_radar_chart(matches, puuid)
+            except Exception as e:
+                print(f"Error generating champion radar chart: {e}")
+            
             # Prepare context updates
             context_updates = {
                 "visualizations": visualizations

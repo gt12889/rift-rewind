@@ -467,4 +467,47 @@ if os.path.exists(angular_dir):
     async def root():
         """Root endpoint - serve Angular app."""
         index_path = os.path.join(angular_dir, "index.html")
-        logger.info(f"Root endpoint called - checking index.html at: {index_path}
+        logger.info(f"Root endpoint called - checking index.html at: {index_path}")
+        logger.info(f"Index.html exists: {os.path.exists(index_path)}")
+        if os.path.exists(index_path):
+            logger.info("Serving Angular index.html")
+            return FileResponse(index_path)
+        logger.warning("Angular index.html not found, returning error message")
+        return {"message": "Angular app not found. Run 'npm run build' in the frontend directory."}
+    
+    # Serve Angular static files (JS, CSS, etc.) from root path
+    # Since base-href is "/", we mount at root with html=True for SPA routing
+    # IMPORTANT: This must be AFTER all API routes are defined
+    app.mount("/", StaticFiles(directory=angular_dir, html=True), name="angular_static")
+else:
+    logger.info("Angular directory not found, using legacy static files")
+    # Fallback to legacy static files
+    if os.path.exists(static_dir):
+        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    
+    @app.get("/")
+    async def root():
+        """Root endpoint - serve legacy UI."""
+        ui_path = os.path.join(static_dir, "index.html")
+        logger.info(f"Root endpoint called - serving legacy UI from: {ui_path}")
+        logger.info(f"Legacy index.html exists: {os.path.exists(ui_path)}")
+        if os.path.exists(ui_path):
+            logger.info("Serving legacy index.html")
+            return FileResponse(ui_path)
+        logger.warning("Legacy index.html not found")
+        return {
+            "message": "Rift Rewind API",
+            "version": "1.0.0",
+            "status": "operational",
+            "ui": "Build Angular app with 'npm run build' or use legacy UI at /static/index.html"
+        }
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "src.api.main:app",
+        host="0.0.0.0",
+        port=settings.api_port,
+        reload=settings.app_debug
+    )
+

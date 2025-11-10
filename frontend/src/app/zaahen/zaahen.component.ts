@@ -1,6 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ApiService } from '../api.service';
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 @Component({
   selector: 'app-zaahen',
@@ -42,28 +49,68 @@ import { FormsModule } from '@angular/forms';
         <div class="zaahen-interactive">
           <div class="chat-container">
             <h3 class="chat-title">CONSULT ZAAHEN</h3>
-            <div class="chat-messages" #chatMessages>
-              <div class="message agent" *ngFor="let message of messages">
-                <div class="message-icon">⚔️</div>
+            <div class="chat-messages" #chatMessagesContainer>
+              <div *ngIf="messages.length === 0" class="welcome-message">
+                <div class="welcome-icon">⚔️</div>
+                <p class="welcome-text">Welcome, summoner. I am Zaahen, your AI coaching agent. Ask me anything about your gameplay, strategies, or how to improve your performance on the Rift.</p>
+              </div>
+              
+              <div *ngFor="let message of messages" 
+                   [class]="'message message-' + message.role">
+                <div class="message-icon" [attr.data-role]="message.role">
+                  <span *ngIf="message.role === 'user'">👤</span>
+                  <span *ngIf="message.role === 'assistant'">⚔️</span>
+                </div>
+                <div class="message-content">
+                  <div class="message-author" *ngIf="message.role === 'assistant'">ZAAHEN</div>
+                  <div class="message-author" *ngIf="message.role === 'user'">YOU</div>
+                  <div class="message-text" [innerHTML]="formatMessage(message.content)"></div>
+                  <div class="message-time">{{ formatTimestamp(message.timestamp) }}</div>
+                </div>
+              </div>
+              
+              <div *ngIf="isLoading" class="message message-assistant">
+                <div class="message-icon" data-role="assistant">
+                  <span>⚔️</span>
+                </div>
                 <div class="message-content">
                   <div class="message-author">ZAAHEN</div>
-                  <div class="message-text">{{ message.text }}</div>
-                  <div class="message-time">{{ message.time }}</div>
+                  <div class="loading-indicator">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                  </div>
                 </div>
               </div>
             </div>
             
+            <div *ngIf="error" class="error-message">
+              <span class="error-icon">⚠️</span>
+              <span>{{ error }}</span>
+              <button (click)="dismissError()" class="error-dismiss">×</button>
+            </div>
+            
             <div class="chat-input-container">
-              <input 
-                type="text" 
-                class="chat-input"
-                [(ngModel)]="userInput"
+              <textarea
+                [(ngModel)]="userMessage"
+                (keydown)="onEnterKey($event)"
+                (input)="adjustTextareaHeight()"
                 placeholder="Ask Zaahen about your gameplay..."
-                (keyup.enter)="sendMessage()"
-              />
-              <button class="chat-send" (click)="sendMessage()" [disabled]="!userInput.trim() || loading">
-                {{ loading ? 'SENDING...' : 'SEND' }}
+                [disabled]="isLoading"
+                class="chat-input"
+                rows="1"
+                #messageInput
+              ></textarea>
+              <button class="chat-send" (click)="sendMessage()" [disabled]="!userMessage.trim() || isLoading">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" *ngIf="!isLoading">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span *ngIf="isLoading">SENDING...</span>
               </button>
+            </div>
+            <div class="input-footer">
+              <span class="hint-text">Press Enter to send, Shift+Enter for new line</span>
             </div>
           </div>
         </div>
@@ -184,31 +231,88 @@ import { FormsModule } from '@angular/forms';
     }
     
     .chat-messages {
-      min-height: 300px;
-      max-height: 500px;
+      min-height: 400px;
+      max-height: 600px;
       overflow-y: auto;
       margin-bottom: 24px;
       padding: 20px;
       background: rgba(5, 5, 8, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .welcome-message {
+      text-align: center;
+      padding: 40px 20px;
+      background: rgba(212, 175, 55, 0.05);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 0;
+    }
+    
+    .welcome-icon {
+      font-size: 3em;
+      margin-bottom: 16px;
+    }
+    
+    .welcome-text {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      font-size: 1em;
     }
     
     .message {
       display: flex;
       gap: 16px;
-      margin-bottom: 20px;
-      padding: 16px;
-      background: rgba(255, 255, 255, 0.03);
-      border-left: 3px solid rgba(212, 175, 55, 0.5);
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .message-user {
+      flex-direction: row-reverse;
     }
     
     .message-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1.5em;
       flex-shrink: 0;
+      background: rgba(212, 175, 55, 0.1);
+      border: 2px solid rgba(212, 175, 55, 0.3);
+    }
+    
+    .message-icon[data-role="user"] {
+      border-color: rgba(192, 192, 192, 0.5);
+      background: rgba(192, 192, 192, 0.1);
+    }
+    
+    .message-icon[data-role="assistant"] {
+      border-color: rgba(212, 175, 55, 0.5);
+      background: rgba(212, 175, 55, 0.1);
     }
     
     .message-content {
       flex: 1;
+      max-width: 70%;
+    }
+    
+    .message-user .message-content {
+      text-align: right;
     }
     
     .message-author {
@@ -217,13 +321,27 @@ import { FormsModule } from '@angular/forms';
       letter-spacing: 0.05em;
       color: var(--metallic-gold);
       margin-bottom: 8px;
-      font-size: 0.9em;
+      font-size: 0.85em;
+    }
+    
+    .message-user .message-author {
+      color: var(--metallic-silver);
     }
     
     .message-text {
       color: var(--text-primary);
       line-height: 1.6;
       margin-bottom: 8px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid rgba(212, 175, 55, 0.5);
+      border-radius: 0;
+    }
+    
+    .message-user .message-text {
+      background: rgba(192, 192, 192, 0.05);
+      border-left: none;
+      border-right: 3px solid rgba(192, 192, 192, 0.5);
     }
     
     .message-time {
@@ -231,11 +349,80 @@ import { FormsModule } from '@angular/forms';
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+    
+    .loading-indicator {
+      display: flex;
+      gap: 5px;
+      padding: 12px 16px;
+    }
+    
+    .loading-indicator .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--metallic-gold);
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    
+    .loading-indicator .dot:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    .loading-indicator .dot:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+    
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: scale(0);
+      }
+      40% {
+        transform: scale(1);
+      }
+    }
+    
+    .error-message {
+      margin-bottom: 15px;
+      padding: 15px 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ff6b6b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: 0;
+    }
+    
+    .error-icon {
+      font-size: 1.2em;
+    }
+    
+    .error-dismiss {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #ff6b6b;
+      font-size: 1.5em;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .error-dismiss:hover {
+      opacity: 0.7;
     }
     
     .chat-input-container {
       display: flex;
       gap: 12px;
+      align-items: flex-end;
     }
     
     .chat-input {
@@ -248,12 +435,20 @@ import { FormsModule } from '@angular/forms';
       font-family: inherit;
       border-radius: 0;
       transition: all 0.3s ease;
+      resize: none;
+      min-height: 50px;
+      max-height: 150px;
     }
     
     .chat-input:focus {
       outline: none;
       border-color: rgba(212, 175, 55, 0.6);
       box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    }
+    
+    .chat-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     
     .chat-input::placeholder {
@@ -266,7 +461,7 @@ import { FormsModule } from '@angular/forms';
       background: rgba(212, 175, 55, 0.2);
       border: 2px solid rgba(212, 175, 55, 0.5);
       color: var(--metallic-gold);
-      padding: 14px 32px;
+      padding: 14px 20px;
       font-size: 0.9em;
       font-weight: 700;
       text-transform: uppercase;
@@ -274,6 +469,11 @@ import { FormsModule } from '@angular/forms';
       cursor: pointer;
       transition: all 0.3s ease;
       border-radius: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 50px;
+      height: 50px;
     }
     
     .chat-send:hover:not(:disabled) {
@@ -286,6 +486,19 @@ import { FormsModule } from '@angular/forms';
     .chat-send:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
+    }
+    
+    .input-footer {
+      margin-top: 10px;
+      text-align: center;
+    }
+    
+    .hint-text {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
     
     /* Scrollbar styling */
@@ -307,94 +520,124 @@ import { FormsModule } from '@angular/forms';
     }
   `]
 })
-export class ZaahenComponent {
-  userInput = '';
-  loading = false;
-  messages: Array<{ text: string; time: string }> = [
-    {
-      text: 'Welcome, summoner. I am Zaahen, your AI coaching agent. Ask me anything about your gameplay, strategies, or how to improve your performance on the Rift.',
-      time: new Date().toLocaleTimeString()
-    }
-  ];
-  
-  sendMessage() {
-    if (!this.userInput.trim() || this.loading) return;
-    
-    const userMessage = this.userInput.trim();
-    this.userInput = '';
-    this.loading = true;
-    
-    // Simulate AI response (replace with actual API call later)
+export class ZaahenComponent implements OnInit, AfterViewChecked {
+  messages: ChatMessage[] = [];
+  userMessage: string = '';
+  isLoading: boolean = false;
+  error: string | null = null;
+  @ViewChild('chatMessagesContainer') private chatContainer!: ElementRef;
+  @ViewChild('messageInput') private messageInput!: ElementRef<HTMLTextAreaElement>;
+
+  constructor(private apiService: ApiService) {}
+
+  ngOnInit(): void {
+    // Auto-focus the input when component loads
     setTimeout(() => {
-      const responses = [
-        `Based on your gameplay patterns, I recommend focusing on ${this.getRandomAdvice()}. This will help you improve your win rate significantly.`,
-        `Your performance shows strength in ${this.getRandomStrength()}, but you should work on ${this.getRandomWeakness()} to reach the next level.`,
-        `I've analyzed your recent matches. Consider trying ${this.getRandomStrategy()} to adapt to the current meta and improve your overall performance.`,
-        `Your champion pool is solid, but I suggest expanding into ${this.getRandomChampion()} to counter common picks in your elo range.`
-      ];
-      
+      if (this.messageInput) {
+        this.messageInput.nativeElement.focus();
+      }
+    }, 100);
+  }
+
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
+  }
+
+  scrollToBottom(): void {
+    try {
+      if (this.chatContainer) {
+        this.chatContainer.nativeElement.scrollTop = this.chatContainer.nativeElement.scrollHeight;
+      }
+    } catch (err) {
+      // Ignore scroll errors
+    }
+  }
+
+  onEnterKey(event: Event): void {
+    const keyboardEvent = event as KeyboardEvent;
+    if (keyboardEvent.key === 'Enter' && !keyboardEvent.shiftKey) {
+      keyboardEvent.preventDefault();
+      this.sendMessage();
+    }
+  }
+
+  async sendMessage(): Promise<void> {
+    if (!this.userMessage.trim() || this.isLoading) {
+      return;
+    }
+
+    const userMsg = this.userMessage.trim();
+    this.userMessage = '';
+    this.error = null;
+
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: userMsg,
+      timestamp: new Date()
+    };
+    this.messages.push(userMessage);
+
+    this.isLoading = true;
+
+    try {
+      // Prepare conversation history (all messages except the current one we just added)
+      const conversationHistory = this.messages
+        .slice(0, -1) // Exclude the last message (the current user message)
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+
+      // Call API
+      const response = await this.apiService.chatWithAgent(userMsg, null, conversationHistory);
+
+      // Add assistant response to chat
       this.messages.push({
-        text: responses[Math.floor(Math.random() * responses.length)],
-        time: new Date().toLocaleTimeString()
+        role: 'assistant',
+        content: response.response,
+        timestamp: new Date()
       });
-      
-      this.loading = false;
-    }, 1500);
+    } catch (error: any) {
+      this.error = error.message || 'Failed to get response from Zaahen. Please try again.';
+      console.error('Chat error:', error);
+    } finally {
+      this.isLoading = false;
+      // Auto-resize textarea
+      this.adjustTextareaHeight();
+      // Focus back on input
+      setTimeout(() => {
+        if (this.messageInput) {
+          this.messageInput.nativeElement.focus();
+        }
+      }, 100);
+    }
   }
-  
-  private getRandomAdvice(): string {
-    const advice = [
-      'map awareness and vision control',
-      'early game aggression and lane dominance',
-      'teamfight positioning and target selection',
-      'objective control and macro decision-making',
-      'itemization and build optimization'
-    ];
-    return advice[Math.floor(Math.random() * advice.length)];
+
+  adjustTextareaHeight(): void {
+    if (this.messageInput) {
+      const textarea = this.messageInput.nativeElement;
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+    }
   }
-  
-  private getRandomStrength(): string {
-    const strengths = [
-      'late game scaling',
-      'mechanical skill',
-      'roaming and map pressure',
-      'objective control',
-      'team coordination'
-    ];
-    return strengths[Math.floor(Math.random() * strengths.length)];
+
+  formatMessage(content: string): string {
+    // Simple formatting: convert newlines to <br> and escape HTML
+    return content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
   }
-  
-  private getRandomWeakness(): string {
-    const weaknesses = [
-      'early game consistency',
-      'vision control',
-      'positioning in teamfights',
-      'resource management',
-      'adaptability to different matchups'
-    ];
-    return weaknesses[Math.floor(Math.random() * weaknesses.length)];
+
+  formatTimestamp(timestamp: Date): string {
+    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
-  
-  private getRandomStrategy(): string {
-    const strategies = [
-      'a more aggressive early game approach',
-      'focusing on objective control',
-      'improving your wave management',
-      'better vision placement',
-      'adapting your build to match situations'
-    ];
-    return strategies[Math.floor(Math.random() * strategies.length)];
-  }
-  
-  private getRandomChampion(): string {
-    const champions = [
-      'tank supports',
-      'control mages',
-      'split-push champions',
-      'engage tanks',
-      'utility supports'
-    ];
-    return champions[Math.floor(Math.random() * champions.length)];
+
+  dismissError(): void {
+    this.error = null;
   }
 }
 

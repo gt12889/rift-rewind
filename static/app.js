@@ -50,6 +50,13 @@ function displayResults(data, actionType) {
             metricsHtml += formatRankInfo(data.rank_info);
             metricsHtml += '<hr style="margin: 15px 0;">';
         }
+        
+        // Add rank comparisons
+        if (data.rank_comparisons) {
+            metricsHtml += formatRankComparisons(data.rank_comparisons);
+            metricsHtml += '<hr style="margin: 15px 0;">';
+        }
+        
         metricsHtml += formatKeyMetrics(data.key_metrics || {});
         document.getElementById('keyMetrics').innerHTML = metricsHtml;
         document.getElementById('trends').textContent = data.trends || 'No trend data available';
@@ -90,6 +97,67 @@ function formatRankInfo(rankInfo) {
         `;
     } else {
         html += '<p>Unranked</p>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function formatRankComparisons(comparisons) {
+    if (!comparisons) return '';
+    
+    let html = '<div style="background: #f0f4ff; padding: 15px; border-radius: 10px; margin-bottom: 20px;">';
+    html += '<h4 style="color: #667eea; margin-bottom: 15px;">📊 Rank Comparisons</h4>';
+    
+    // KDA comparison
+    if (comparisons.kda_vs_rank) {
+        const kda = comparisons.kda_vs_rank;
+        const diffClass = kda.status === 'above' ? 'color: #4caf50;' : kda.status === 'below' ? 'color: #f44336;' : 'color: #666;';
+        const arrow = kda.status === 'above' ? '↑' : kda.status === 'below' ? '↓' : '=';
+        html += `
+            <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 8px;">
+                <p style="font-weight: 600; margin-bottom: 5px;">KDA vs ${kda.rank_average} (Rank Average)</p>
+                <p style="${diffClass}">
+                    <strong>Your KDA: ${kda.player_kda}</strong> ${arrow} 
+                    ${kda.difference > 0 ? '+' : ''}${kda.difference.toFixed(2)} 
+                    (${kda.percentage_diff > 0 ? '+' : ''}${kda.percentage_diff.toFixed(1)}%)
+                </p>
+            </div>
+        `;
+    }
+    
+    // CS/min comparison
+    if (comparisons.cs_per_min_vs_rank) {
+        const cs = comparisons.cs_per_min_vs_rank;
+        const diffClass = cs.status === 'above' ? 'color: #4caf50;' : cs.status === 'below' ? 'color: #f44336;' : 'color: #666;';
+        const arrow = cs.status === 'above' ? '↑' : cs.status === 'below' ? '↓' : '=';
+        html += `
+            <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 8px;">
+                <p style="font-weight: 600; margin-bottom: 5px;">CS/min vs ${cs.rank_average} (Rank Average)</p>
+                <p style="${diffClass}">
+                    <strong>Your CS/min: ${cs.player_cs_per_min}</strong> ${arrow} 
+                    ${cs.difference > 0 ? '+' : ''}${cs.difference.toFixed(2)} 
+                    (${cs.percentage_diff > 0 ? '+' : ''}${cs.percentage_diff.toFixed(1)}%)
+                </p>
+            </div>
+        `;
+    }
+    
+    // Champion win rate comparison
+    if (comparisons.champion_win_rate) {
+        const champ = comparisons.champion_win_rate;
+        const diffClass = champ.status === 'above' ? 'color: #4caf50;' : champ.status === 'below' ? 'color: #f44336;' : 'color: #666;';
+        const arrow = champ.status === 'above' ? '↑' : champ.status === 'below' ? '↓' : '=';
+        html += `
+            <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 8px;">
+                <p style="font-weight: 600; margin-bottom: 5px;">${champ.champion} Win Rate vs Average</p>
+                <p style="${diffClass}">
+                    <strong>Your Win Rate: ${champ.player_win_rate}%</strong> ${arrow} 
+                    ${champ.difference > 0 ? '+' : ''}${champ.difference.toFixed(1)}% 
+                    (vs ${champ.champion_average}% average)
+                </p>
+            </div>
+        `;
     }
     
     html += '</div>';

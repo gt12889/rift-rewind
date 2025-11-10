@@ -1,25 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PlayerInsightsComponent } from './player-insights/player-insights.component';
 import { ZaahenComponent } from './zaahen/zaahen.component';
 import { HeroVideoComponent } from './hero-video/hero-video.component';
-import { AgentChatComponent } from './agent-chat/agent-chat.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, PlayerInsightsComponent, ZaahenComponent, AgentChatComponent, HeroVideoComponent],
+  imports: [CommonModule, PlayerInsightsComponent, ZaahenComponent, HeroVideoComponent],
   template: `
     <nav class="navbar">
       <div class="navbar-logo">RIFT REWIND</div>
       <ul class="navbar-links">
         <li><a (click)="setActiveTab('insights'); $event.preventDefault()" [class.active]="activeTab === 'insights'" href="#insights">INSIGHTS</a></li>
-        <li><a (click)="setActiveTab('matches'); $event.preventDefault()" [class.active]="activeTab === 'matches'" href="#matches">MATCH ANALYSIS</a></li>
         <li><a (click)="setActiveTab('year-summary'); $event.preventDefault()" [class.active]="activeTab === 'year-summary'" href="#year-summary">YEAR SUMMARY</a></li>
         <li><a (click)="setActiveTab('comparisons'); $event.preventDefault()" [class.active]="activeTab === 'comparisons'" href="#comparisons">COMPARISONS</a></li>
         <li><a (click)="setActiveTab('visualizations'); $event.preventDefault()" [class.active]="activeTab === 'visualizations'" href="#visualizations">VISUALIZATIONS</a></li>
-        <li><a (click)="setActiveTab('social'); $event.preventDefault()" [class.active]="activeTab === 'social'" href="#social">SOCIAL CONTENT</a></li>
-        <li><a (click)="setActiveTab('agent'); $event.preventDefault()" [class.active]="activeTab === 'agent'" href="#agent">AI AGENT</a></li>
         <li><a (click)="setActiveTab('zaahen'); $event.preventDefault()" [class.active]="activeTab === 'zaahen'" href="#zaahen">ZAAHEN</a></li>
       </ul>
       <div class="navbar-actions">
@@ -32,13 +28,12 @@ import { AgentChatComponent } from './agent-chat/agent-chat.component';
       </div>
     </nav>
     
-    <app-hero-video></app-hero-video>
+    <app-hero-video (navigateToInsights)="onNavigateToInsights()"></app-hero-video>
     
-    <div class="tab-content">
+    <div class="tab-content" #tabContent>
       <app-player-insights *ngIf="activeTab === 'insights'"></app-player-insights>
-      <app-agent-chat *ngIf="activeTab === 'agent'"></app-agent-chat>
       <app-zaahen *ngIf="activeTab === 'zaahen'"></app-zaahen>
-      <div *ngIf="activeTab !== 'insights' && activeTab !== 'agent' && activeTab !== 'zaahen'" class="coming-soon">
+      <div *ngIf="activeTab !== 'insights' && activeTab !== 'zaahen'" class="coming-soon">
         <h2>COMING SOON</h2>
         <p>This feature is under development.</p>
       </div>
@@ -66,11 +61,7 @@ import { AgentChatComponent } from './agent-chat/agent-chat.component';
     
     .tab-content {
       min-height: calc(100vh - 200px);
-    }
-    
-    .tab-content app-agent-chat {
-      display: block;
-      height: 100%;
+      scroll-margin-top: 80px; /* Account for navbar + spacing */
     }
     
     .coming-soon {
@@ -95,11 +86,57 @@ import { AgentChatComponent } from './agent-chat/agent-chat.component';
   `]
 })
 export class AppComponent {
+  @ViewChild('tabContent') tabContent!: any;
+  
   title = 'Rift Rewind - Hall of Legends';
   activeTab = 'insights';
   
   setActiveTab(tab: string) {
     this.activeTab = tab;
+  }
+  
+  onNavigateToInsights() {
+    // Set active tab to insights
+    this.activeTab = 'insights';
+    
+    // Wait for the DOM to update, then scroll to tab content
+    setTimeout(() => {
+      const heroSection = document.querySelector('app-hero-video');
+      const tabContentElement = document.querySelector('.tab-content');
+      const navbar = document.querySelector('.navbar');
+      
+      if (heroSection && tabContentElement) {
+        const navbarHeight = navbar ? navbar.getBoundingClientRect().height : 60;
+        
+        // Get the hero container which has min-height: 350vh
+        const heroContainer = heroSection.querySelector('.container-scroll');
+        
+        if (heroContainer) {
+          // Get the bottom of the hero container in document coordinates
+          const heroRect = heroContainer.getBoundingClientRect();
+          const heroBottom = heroRect.bottom + window.pageYOffset;
+          
+          // Scroll to just past the hero container so tab content is visible
+          // The hero container has min-height: 350vh, so scrolling past it reveals the content
+          const scrollTarget = heroBottom - navbarHeight + 40; // Add some spacing
+          
+          window.scrollTo({ 
+            top: Math.max(0, scrollTarget), 
+            behavior: 'smooth' 
+          });
+        } else {
+          // Fallback: scroll to tab content directly
+          const tabRect = tabContentElement.getBoundingClientRect();
+          const elementTop = tabRect.top + window.pageYOffset;
+          const scrollTarget = elementTop - navbarHeight - 20;
+          
+          window.scrollTo({ 
+            top: Math.max(0, scrollTarget), 
+            behavior: 'smooth' 
+          });
+        }
+      }
+    }, 200);
   }
 }
 

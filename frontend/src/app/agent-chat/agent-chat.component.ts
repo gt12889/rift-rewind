@@ -64,7 +64,7 @@ interface ChatMessage {
         <div class="input-wrapper">
           <textarea
             [(ngModel)]="userMessage"
-            (keydown.enter)="onEnterKey($event)"
+            (keydown.enter)="onEnterKey($any($event))"
             placeholder="Type your message here..."
             [disabled]="isLoading"
             class="chat-input"
