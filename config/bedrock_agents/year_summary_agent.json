@@ -1,0 +1,18 @@
+{
+  "agent_name": "year_summary",
+  "description": "Creates comprehensive year-end retrospectives",
+  "model_id": "anthropic.claude-v2",
+  "instructions_file": "config/bedrock_agents/instructions/year_summary.md",
+  "tools": [
+    {
+      "name": "generate_summary",
+      "description": "Generate year-end summary"
+    }
+  ],
+  "output_format": {
+    "type": "narrative",
+    "length": "2-3_paragraphs",
+    "style": "celebratory_reflective"
+  }
+}
+

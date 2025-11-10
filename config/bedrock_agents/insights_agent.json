@@ -1,0 +1,23 @@
+{
+  "agent_name": "insights_generation",
+  "description": "Generates AI-powered insights from analyzed match data",
+  "model_id": "anthropic.claude-v2",
+  "instructions_file": "config/bedrock_agents/instructions/insights.md",
+  "tools": [
+    {
+      "name": "generate_insights",
+      "description": "Generate personalized insights from statistics"
+    }
+  ],
+  "output_format": {
+    "type": "json",
+    "schema": {
+      "strengths": "array",
+      "weaknesses": "array",
+      "trends": "string",
+      "unexpected_insights": "array",
+      "recommendations": "array"
+    }
+  }
+}
+

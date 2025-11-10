@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Rift Rewind - AI-powered League of Legends coaching agent infrastructure'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - staging
+      - production
+
+Resources:
+  # Lambda function for API
+  RiftRewindLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'rift-rewind-api-${Environment}'
+      Runtime: python3.11
+      Handler: main.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {'statusCode': 200, 'body': 'Hello from Lambda'}
+      Environment:
+        Variables:
+          RIOT_API_KEY: !Ref RiotAPIKey
+          AWS_REGION: !Ref AWS::Region
+      Tags:
+        - Key: rift-rewind-hackathon
+          Value: '2025'
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Lambda execution role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock-runtime:InvokeModel
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - comprehend:DetectSentiment
+                  - comprehend:DetectKeyPhrases
+                Resource: '*'
+
+  # API Gateway
+  RiftRewindAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub 'rift-rewind-api-${Environment}'
+      Description: 'Rift Rewind API Gateway'
+      Tags:
+        - Key: rift-rewind-hackathon
+          Value: '2025'
+
+  # Parameter for Riot API Key (should be stored in Secrets Manager in production)
+  RiotAPIKey:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /rift-rewind/riot-api-key
+
+Outputs:
+  ApiEndpoint:
+    Description: 'API Gateway endpoint URL'
+    Value: !GetAtt RiftRewindAPI.RootResourceId
+  LambdaFunctionName:
+    Description: 'Lambda function name'
+    Value: !Ref RiftRewindLambda
+

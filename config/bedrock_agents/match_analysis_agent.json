@@ -1,0 +1,22 @@
+{
+  "agent_name": "match_analysis",
+  "description": "Analyzes League of Legends match data and extracts statistics",
+  "model_id": "anthropic.claude-v2",
+  "instructions_file": "config/bedrock_agents/instructions/match_analysis.md",
+  "tools": [
+    {
+      "name": "analyze_matches",
+      "description": "Analyze match data and extract statistics"
+    }
+  ],
+  "output_format": {
+    "type": "json",
+    "schema": {
+      "match_analysis": "object",
+      "key_metrics": "object",
+      "champion_stats": "object",
+      "role_stats": "object"
+    }
+  }
+}
+

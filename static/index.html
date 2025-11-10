@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rift Rewind - League of Legends Coaching Agent</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Rift Rewind</h1>
+            <p>AI-Powered League of Legends Coaching Agent</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="summonerName">Riot ID (GameName#Tag)</label>
+                    <input type="text" id="summonerName" placeholder="e.g., Faker#KR1 or YourName#NA1" />
+                    <p class="help-text">Enter your Riot ID in format: GameName#TagLine</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <select id="region">
+                        <option value="na1">NA (North America)</option>
+                        <option value="euw1">EUW (Europe West)</option>
+                        <option value="eun1">EUN (Europe Nordic & East)</option>
+                        <option value="kr">KR (Korea)</option>
+                        <option value="br1">BR (Brazil)</option>
+                        <option value="la1">LAN (Latin America North)</option>
+                        <option value="la2">LAS (Latin America South)</option>
+                        <option value="oc1">OCE (Oceania)</option>
+                        <option value="ru">RU (Russia)</option>
+                        <option value="tr1">TR (Turkey)</option>
+                        <option value="jp1">JP (Japan)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="actionType">Action</label>
+                    <select id="actionType">
+                        <option value="insights">Get Player Insights</option>
+                        <option value="year-summary">Year-End Summary</option>
+                        <option value="social-content">Social Content</option>
+                    </select>
+                </div>
+                
+                <button class="btn" id="submitBtn">Get Insights</button>
+            </div>
+            
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing your matches... This may take a moment.</p>
+            </div>
+            
+            <div id="error" class="error" style="display: none;"></div>
+            
+            <div id="results" class="results" style="display: none;">
+                <div class="tabs">
+                    <button class="tab active" data-tab="overview">Overview</button>
+                    <button class="tab" data-tab="strengths">Strengths</button>
+                    <button class="tab" data-tab="weaknesses">Weaknesses</button>
+                    <button class="tab" data-tab="insights">Unexpected Insights</button>
+                    <button class="tab" data-tab="recommendations">Recommendations</button>
+                </div>
+                
+                <div id="overview" class="tab-content active">
+                    <div class="result-card">
+                        <h3>Key Metrics</h3>
+                        <div id="keyMetrics"></div>
+                    </div>
+                    <div class="result-card">
+                        <h3>Trends</h3>
+                        <p id="trends"></p>
+                    </div>
+                </div>
+                
+                <div id="strengths" class="tab-content">
+                    <div class="result-card">
+                        <h3>Your Strengths</h3>
+                        <div id="strengthsList"></div>
+                    </div>
+                </div>
+                
+                <div id="weaknesses" class="tab-content">
+                    <div class="result-card">
+                        <h3>Areas for Improvement</h3>
+                        <div id="weaknessesList"></div>
+                    </div>
+                </div>
+                
+                <div id="insights" class="tab-content">
+                    <div class="result-card">
+                        <h3>Unexpected Insights</h3>
+                        <div id="insightsList"></div>
+                    </div>
+                </div>
+                
+                <div id="recommendations" class="tab-content">
+                    <div class="result-card">
+                        <h3>Recommendations</h3>
+                        <div id="recommendationsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/app.js"></script>
+    <script>
+        // Add event listeners
+        document.getElementById('submitBtn').addEventListener('click', getInsights);
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                showTab(tabName);
+            });
+        });
+        
+        // Allow Enter key to submit
+        document.getElementById('summonerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getInsights();
+            }
+        });
+    </script>
+</body>
+</html>

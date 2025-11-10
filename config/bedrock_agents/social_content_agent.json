@@ -1,0 +1,22 @@
+{
+  "agent_name": "social_content",
+  "description": "Generates shareable social media content",
+  "model_id": "anthropic.claude-v2",
+  "instructions_file": "config/bedrock_agents/instructions/social_content.md",
+  "tools": [
+    {
+      "name": "generate_content",
+      "description": "Generate social media content"
+    }
+  ],
+  "output_format": {
+    "type": "social_media",
+    "formats": [
+      "year_end_card",
+      "insight_card",
+      "twitter_thread",
+      "comparison_post"
+    ]
+  }
+}
+

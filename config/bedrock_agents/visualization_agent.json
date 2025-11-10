@@ -1,0 +1,22 @@
+{
+  "agent_name": "visualization",
+  "description": "Creates charts and visualizations from match data",
+  "model_id": "anthropic.claude-v2",
+  "instructions_file": "config/bedrock_agents/instructions/visualization.md",
+  "tools": [
+    {
+      "name": "generate_charts",
+      "description": "Generate visualization charts"
+    }
+  ],
+  "output_format": {
+    "type": "base64_images",
+    "charts": [
+      "win_rate_chart",
+      "kda_trend",
+      "champion_performance",
+      "role_performance"
+    ]
+  }
+}
+

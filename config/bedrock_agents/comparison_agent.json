@@ -1,0 +1,21 @@
+{
+  "agent_name": "player_comparison",
+  "description": "Compares two players and generates insights",
+  "model_id": "anthropic.claude-v2",
+  "instructions_file": "config/bedrock_agents/instructions/comparison.md",
+  "tools": [
+    {
+      "name": "compare_players",
+      "description": "Compare two players and generate insights"
+    }
+  ],
+  "output_format": {
+    "type": "comparison",
+    "includes": [
+      "performance_metrics",
+      "playstyle_complement",
+      "shareable_content"
+    ]
+  }
+}
+

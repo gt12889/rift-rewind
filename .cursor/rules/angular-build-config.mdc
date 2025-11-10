@@ -1,0 +1,169 @@
+---
+description: Angular Build Output Configuration - Maintain Angular 17+ build structure and FastAPI serving
+globs:
+  - "**/angular.json"
+  - "**/package.json"
+  - "**/src/api/main.py"
+alwaysApply: true
+---
+
+# Angular Build Output Configuration
+
+## Critical Configuration Requirements
+
+This rule ensures the Angular build output structure and FastAPI serving configuration remain consistent.
+
+### Angular Build Output Structure
+
+**Angular 17+ with `@angular-devkit/build-angular:application` builder automatically creates a `browser` subdirectory.**
+
+The build output structure is:
+```
+static/
+  angular/
+    browser/          # Angular 17+ outputs here
+      index.html
+      main-*.js
+      polyfills-*.js
+      styles-*.css
+    3rdpartylicenses.txt
+```
+
+### Required Configuration Files
+
+#### 1. `angular.json` - Build Output Path
+
+```json
+{
+  "projects": {
+    "rift-rewind": {
+      "architect": {
+        "build": {
+          "options": {
+            "outputPath": "../static/angular"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**CRITICAL**: The `outputPath` should be `../static/angular` (relative to the `frontend` directory). Angular 17+ will automatically create the `browser` subdirectory.
+
+#### 2. `package.json` - Build Scripts
+
+```json
+{
+  "scripts": {
+    "build": "ng build --output-path=static/angular --base-href=/",
+    "watch": "ng build --watch --output-path=static/angular --base-href=/"
+  }
+}
+```
+
+**CRITICAL**: 
+- `--output-path=static/angular` - Outputs to `static/angular` (Angular creates `browser` subdirectory)
+- `--base-href=/` - Sets base href to root for SPA routing
+
+#### 3. `frontend/src/index.html` - Base Href
+
+```html
+<base href="/">
+```
+
+**CRITICAL**: Base href must be `/` to match FastAPI root mount.
+
+### FastAPI Serving Configuration
+
+#### `src/api/main.py` - Static File Serving
+
+```python
+# Serve static files - Angular app takes priority
+static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
+angular_dir = os.path.join(static_dir, "angular", "browser")  # Angular 17+ outputs to "browser" subdirectory
+
+if os.path.exists(angular_dir):
+    # Serve Angular static files (JS, CSS, etc.) from root path
+    # Since base-href is "/", we mount at root with html=True for SPA routing
+    app.mount("/", StaticFiles(directory=angular_dir, html=True), name="angular_static")
+    
+    @app.get("/")
+    async def root():
+        """Root endpoint - serve Angular app."""
+        index_path = os.path.join(angular_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"message": "Angular app not found. Run 'npm run build' in the frontend directory."}
+```
+
+**CRITICAL Configuration Points**:
+
+1. **`angular_dir` path**: Must include `"browser"` subdirectory:
+   ```python
+   angular_dir = os.path.join(static_dir, "angular", "browser")
+   ```
+
+2. **Mount path**: Must be root `/` with `html=True`:
+   ```python
+   app.mount("/", StaticFiles(directory=angular_dir, html=True), name="angular_static")
+   ```
+   - `html=True` enables SPA routing (serves index.html for non-file routes)
+   - Mounting at root matches `base-href="/"`
+
+3. **Route precedence**: API routes (`/api/...`, `/health`) must be defined BEFORE the mount to take precedence.
+
+### Build Process
+
+1. **Build command**: `npm run build` (from project root)
+2. **Output location**: `static/angular/browser/`
+3. **Files generated**:
+   - `index.html` (with `<base href="/">`)
+   - `main-*.js` (hashed bundle)
+   - `polyfills-*.js` (hashed polyfills)
+   - `styles-*.css` (hashed styles)
+
+### Verification Checklist
+
+When modifying build configuration, verify:
+
+- [ ] `angular.json` has `outputPath: "../static/angular"`
+- [ ] `package.json` build script has `--output-path=static/angular --base-href=/`
+- [ ] `frontend/src/index.html` has `<base href="/">`
+- [ ] `src/api/main.py` has `angular_dir = os.path.join(static_dir, "angular", "browser")`
+- [ ] `src/api/main.py` mounts at root: `app.mount("/", StaticFiles(directory=angular_dir, html=True))`
+- [ ] API routes are defined BEFORE the mount
+- [ ] Built files exist in `static/angular/browser/` after build
+
+### Common Mistakes to Avoid
+
+1. **DO NOT** remove `"browser"` from `angular_dir` path - Angular 17+ always creates this subdirectory
+2. **DO NOT** change `base-href` to `/static/angular/` - it must be `/` for root mounting
+3. **DO NOT** mount at `/static/angular/` - must mount at root `/` to match base-href
+4. **DO NOT** remove `html=True` from mount - needed for SPA client-side routing
+5. **DO NOT** define API routes after the mount - they won't work
+
+### Troubleshooting
+
+**Issue**: "Angular app not found" error
+- **Check**: Verify `static/angular/browser/index.html` exists
+- **Fix**: Run `npm run build` from project root
+
+**Issue**: 404 errors for JS/CSS files
+- **Check**: Verify mount path matches base-href (both should be `/`)
+- **Fix**: Ensure `app.mount("/", ...)` and `<base href="/">` match
+
+**Issue**: API routes return 404
+- **Check**: Verify API routes are defined BEFORE the mount
+- **Fix**: Move API route definitions above the `app.mount()` call
+
+**Issue**: Angular routes don't work (client-side routing fails)
+- **Check**: Verify `html=True` is set on mount
+- **Fix**: Ensure `app.mount("/", StaticFiles(directory=angular_dir, html=True))`
+
+### Maintenance Notes
+
+- This configuration is specific to Angular 17+ with the `application` builder
+- If upgrading Angular, verify the build output structure hasn't changed
+- The `browser` subdirectory is created automatically by Angular - do not manually create it
+- FastAPI's `StaticFiles` with `html=True` handles SPA routing automatically
